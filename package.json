@@ -3,8 +3,13 @@
   "version": "0.1.0",
   "description": "Markdown bundles: one root Markdown file plus related docs, scripts, and assets.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holdenmatt/md-bundle.git"
+  },
   "files": [
-    "dist"
+    "dist",
+    "SPEC.md"
   ],
   "type": "module",
   "exports": {
