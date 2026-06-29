@@ -12,6 +12,12 @@ An [agent skill](https://agentskills.io/) is one example of a Markdown bundle:
 beside it. `md-bundle` makes that folder shape reusable for skills, agent
 instructions, docs, specs, and other Markdown artifacts.
 
+## Install
+
+```sh
+npm install md-bundle
+```
+
 ## Example
 
 ```txt
