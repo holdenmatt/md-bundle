@@ -1,6 +1,6 @@
 {
   "name": "md-bundle",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Markdown bundles: one root Markdown file plus related docs, scripts, and assets.",
   "license": "MIT",
   "repository": {
@@ -15,7 +15,8 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     }
   },
   "scripts": {
