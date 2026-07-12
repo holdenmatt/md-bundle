@@ -2,6 +2,17 @@
 
 This spec defines behavior that is intentionally more precise than the README.
 
+## Entry Points
+
+- `md-bundle` is the pure model entry point and must not import Node builtins.
+- `md-bundle/node` is the Node filesystem adapter entry point.
+- `loadBundle` and `writeBundle` are exported from `md-bundle/node`, not from
+  `md-bundle`.
+- Migration from `0.1.x`: replace
+  `import { loadBundle, writeBundle } from "md-bundle"` with
+  `import { loadBundle, writeBundle } from "md-bundle/node"`.
+- A `MarkdownBundle` is a value; where it comes from is an adapter.
+
 ## Bundle Model
 
 - Files are sorted lexicographically by path.

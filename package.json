@@ -1,6 +1,6 @@
 {
   "name": "md-bundle",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Markdown bundles: one root Markdown file plus related docs, scripts, and assets.",
   "license": "MIT",
   "repository": {
@@ -9,14 +9,21 @@
   },
   "files": [
     "dist",
-    "SPEC.md"
+    "SPEC.md",
+    "CHANGELOG.md"
   ],
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.js",
+      "default": "./dist/node.js"
     }
   },
   "scripts": {
@@ -30,6 +37,7 @@
   },
   "devDependencies": {
     "@types/node": "^26.0.1",
+    "esbuild": "^0.28.1",
     "oxfmt": "^0.56.0",
     "oxlint": "^1.71.0",
     "typescript": "^6.0.3",

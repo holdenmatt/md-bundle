@@ -1,5 +1,3 @@
-import path from "node:path";
-
 import { fail } from "./error.js";
 
 /**
@@ -28,7 +26,7 @@ export function resolveBundleReference(fromPath: string, referencePath: string):
   const reference = referencePath.replaceAll("\\", "/");
   const target = reference.startsWith("/")
     ? reference.slice(1)
-    : path.posix.join(path.posix.dirname(from), reference);
+    : joinBundlePaths(getBundlePathDirectory(from), reference);
 
   return normalizeBundlePath(target);
 }
@@ -40,10 +38,9 @@ export function formatBundleReference(fromPath: string, targetPath: string): str
   const from = normalizeBundleFilePath(fromPath);
   const target = normalizeBundleFilePath(targetPath);
 
-  const fromDirectory = path.posix.dirname(from);
-  const relative = path.posix.relative(fromDirectory === "." ? "" : fromDirectory, target);
+  const relative = getRelativeBundlePath(getBundlePathDirectory(from), target);
 
-  return relative === "" ? path.posix.basename(target) : relative;
+  return relative === "" ? getBundlePathBaseName(target) : relative;
 }
 
 /**
@@ -84,5 +81,40 @@ function normalizeBundlePath(filePath: string): string {
 }
 
 function isAbsolutePath(filePath: string): boolean {
-  return path.posix.isAbsolute(filePath) || path.win32.isAbsolute(filePath);
+  return (
+    filePath.startsWith("/") || filePath.startsWith("\\\\") || /^[a-zA-Z]:[\\/]/.test(filePath)
+  );
+}
+
+function joinBundlePaths(directory: string, filePath: string): string {
+  return directory === "" ? filePath : `${directory}/${filePath}`;
+}
+
+function getBundlePathDirectory(filePath: string): string {
+  const index = filePath.lastIndexOf("/");
+  return index === -1 ? "" : filePath.slice(0, index);
+}
+
+function getBundlePathBaseName(filePath: string): string {
+  const index = filePath.lastIndexOf("/");
+  return index === -1 ? filePath : filePath.slice(index + 1);
+}
+
+function getRelativeBundlePath(fromDirectory: string, targetPath: string): string {
+  const fromParts = fromDirectory === "" ? [] : fromDirectory.split("/");
+  const targetParts = targetPath.split("/");
+
+  let shared = 0;
+  while (
+    shared < fromParts.length &&
+    shared < targetParts.length &&
+    fromParts[shared] === targetParts[shared]
+  ) {
+    shared += 1;
+  }
+
+  return [
+    ...Array<string>(fromParts.length - shared).fill(".."),
+    ...targetParts.slice(shared),
+  ].join("/");
 }

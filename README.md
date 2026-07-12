@@ -28,12 +28,43 @@ my-skill/
 ```
 
 ```ts
-import { getTextFile, loadBundle } from "md-bundle";
+import { getTextFile } from "md-bundle";
+import { loadBundle } from "md-bundle/node";
 
 const bundle = await loadBundle("my-skill/SKILL.md");
 
 const root = bundle.root.content;
 const checklist = getTextFile(bundle, "references/checklist.md");
+```
+
+## Entry Points
+
+`md-bundle` exports the pure bundle model. It is browser-safe and has no Node
+builtins in its import graph. Use it for bundle values, file type guards, path
+references, and in-memory bundle construction.
+
+```ts
+import { createBundle, isTextFile, resolveBundleReference } from "md-bundle";
+```
+
+`md-bundle/node` exports the Node filesystem adapter.
+
+```ts
+import { loadBundle, writeBundle } from "md-bundle/node";
+```
+
+A `MarkdownBundle` is a value. Where it comes from is an adapter: browser code
+can create, validate, transform, and inspect bundles without depending on
+`node:fs` or `node:path`.
+
+Migration from `0.1.x`:
+
+```ts
+// Before
+import { loadBundle, writeBundle } from "md-bundle";
+
+// After
+import { loadBundle, writeBundle } from "md-bundle/node";
 ```
 
 ## Bundle Model
@@ -76,6 +107,8 @@ Files are addressed by paths relative to the bundle directory. Text files store
 ### Load
 
 ```ts
+import { loadBundle } from "md-bundle/node";
+
 loadBundle(path, { rootPath }?);
 ```
 
@@ -136,6 +169,8 @@ formatBundleReference("docs/index.md", "assets/logo.png");
 ### Write
 
 ```ts
+import { writeBundle } from "md-bundle/node";
+
 writeBundle(bundle, directory);
 ```
 

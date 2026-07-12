@@ -8,10 +8,9 @@ import {
   getBinaryFile,
   getFile,
   getTextFile,
-  loadBundle,
   MarkdownBundleError,
-  writeBundle,
 } from "../src/index.js";
+import { loadBundle, writeBundle } from "../src/node.js";
 
 describe("loadBundle", () => {
   test("loads from a root file and preserves text and binary files", async () => {
