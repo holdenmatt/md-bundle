@@ -1,5 +1,5 @@
 import { fail } from "./error.js";
-import { compareBundlePaths, normalizeBundleFilePath } from "./paths.js";
+import { compareBundlePaths, validateBundlePath } from "./paths.js";
 
 import type {
   MarkdownBundle,
@@ -12,7 +12,7 @@ import type {
  * Input accepted by `createBundle`.
  */
 export type CreateBundleInput = {
-  /** Bundle path of the root Markdown file. */
+  /** Bundle path of the root text file. */
   rootPath: string;
 
   /** Files to normalize into the bundle. */
@@ -23,7 +23,7 @@ export type CreateBundleInput = {
  * Create a normalized in-memory bundle.
  */
 export function createBundle(input: CreateBundleInput): MarkdownBundle {
-  const rootPath = normalizeBundleFilePath(input.rootPath);
+  const rootPath = validateBundlePath(input.rootPath);
 
   const seen = new Set<string>();
   const files: MarkdownBundleFile[] = [];
@@ -41,8 +41,7 @@ export function createBundle(input: CreateBundleInput): MarkdownBundle {
 
   const sortedFiles = files.sort((left, right) => compareBundlePaths(left.path, right.path));
   const root = sortedFiles.find(
-    (file): file is MarkdownBundleTextFile =>
-      isTextFile(file) && file.path === rootPath && file.path.endsWith(".md"),
+    (file): file is MarkdownBundleTextFile => isTextFile(file) && file.path === rootPath,
   );
 
   if (root === undefined) {
@@ -51,7 +50,7 @@ export function createBundle(input: CreateBundleInput): MarkdownBundle {
       fail("ROOT_MISSING", `Bundle root does not exist: ${rootPath}`);
     }
 
-    fail("ROOT_INVALID", `Bundle root must be a text Markdown file: ${rootPath}`);
+    fail("ROOT_INVALID", `Bundle root must be a text file: ${rootPath}`);
   }
 
   return { root, files: sortedFiles };
@@ -61,7 +60,7 @@ export function createBundle(input: CreateBundleInput): MarkdownBundle {
  * Get any bundle file by path.
  */
 export function getFile(bundle: MarkdownBundle, bundlePath: string): MarkdownBundleFile {
-  const normalized = normalizeBundleFilePath(bundlePath);
+  const normalized = validateBundlePath(bundlePath);
 
   const file = bundle.files.find((item) => item.path === normalized);
   return file === undefined
@@ -102,7 +101,7 @@ type BundleFileCandidate = {
  * Normalize one caller-provided file into the stored bundle shape.
  */
 function normalizeInputFile(file: BundleFileCandidate): MarkdownBundleFile {
-  const normalized = normalizeBundleFilePath(file.path);
+  const normalized = validateBundlePath(file.path);
 
   if (isTextFile(file)) {
     return { path: normalized, content: file.content };

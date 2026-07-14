@@ -1,14 +1,14 @@
-import { lstat, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readdir, readFile, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { createBundle } from "./bundle.js";
 import { fail } from "./error.js";
-import { compareBundlePaths, normalizeBundleFilePath } from "./paths.js";
+import { compareBundlePaths, validateBundlePath } from "./paths.js";
 
 import type { MarkdownBundle, MarkdownBundleFile, MarkdownBundleTextFile } from "./types.js";
 
 export type LoadBundleOptions = {
-  /** Bundle path of the root Markdown file. */
+  /** Bundle path of the root text file. */
   rootPath?: string;
 };
 
@@ -57,7 +57,7 @@ export async function loadBundle(
  */
 export async function writeBundle(bundle: MarkdownBundle, directory: string): Promise<void> {
   for (const file of bundle.files) {
-    const bundlePath = normalizeBundleFilePath(file.path);
+    const bundlePath = validateBundlePath(file.path);
     const outputPath = path.join(directory, ...bundlePath.split("/"));
 
     try {
@@ -74,6 +74,7 @@ export async function writeBundle(bundle: MarkdownBundle, directory: string): Pr
  */
 async function loadBundleFiles(directory: string): Promise<MarkdownBundleFile[]> {
   const files: MarkdownBundleFile[] = [];
+  const rootRealPath = await getRealPath(directory);
 
   async function visit(currentDirectory: string): Promise<void> {
     let entries;
@@ -84,9 +85,15 @@ async function loadBundleFiles(directory: string): Promise<MarkdownBundleFile[]>
     }
 
     for (const entry of entries.sort((left, right) => compareBundlePaths(left.name, right.name))) {
-      if ((entry.name === ".git" && entry.isDirectory()) || entry.isSymbolicLink()) continue;
+      if (entry.name === ".git" && entry.isDirectory()) continue;
 
       const absolutePath = path.join(currentDirectory, entry.name);
+      const entryRealPath = await getRealPath(absolutePath);
+      assertContainedPath(rootRealPath, entryRealPath);
+
+      if (entry.isSymbolicLink()) {
+        continue;
+      }
 
       if (entry.isDirectory()) {
         await visit(absolutePath);
@@ -116,12 +123,30 @@ async function loadBundleFiles(directory: string): Promise<MarkdownBundleFile[]>
   return files;
 }
 
+async function getRealPath(filePath: string): Promise<string> {
+  try {
+    return await realpath(filePath);
+  } catch {
+    fail("BUNDLE_LOAD_ERROR", `Could not resolve bundle path: ${filePath}`);
+  }
+}
+
+function assertContainedPath(rootRealPath: string, candidateRealPath: string): void {
+  const relative = path.relative(rootRealPath, candidateRealPath);
+
+  if (relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative))) {
+    return;
+  }
+
+  fail("path-escape", `Bundle path escapes the bundle directory: ${candidateRealPath}`);
+}
+
 /**
  * Infer a conventional root from top-level Markdown files.
  */
 function inferRootPath(files: MarkdownBundleFile[]): string {
   const topLevelMarkdown = files
-    .map((file) => normalizeBundleFilePath(file.path))
+    .map((file) => validateBundlePath(file.path))
     .filter((filePath) => !filePath.includes("/") && filePath.endsWith(".md"));
 
   if (topLevelMarkdown.length === 1) {

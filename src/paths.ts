@@ -1,16 +1,27 @@
 import { fail } from "./error.js";
 
 /**
- * Normalize a stored bundle file path, which cannot be the bundle root.
+ * Validate and return a contained bundle path.
  */
-export function normalizeBundleFilePath(filePath: string): string {
-  const normalized = normalizeBundlePath(filePath);
-
-  if (normalized === "") {
+export function validateBundlePath(filePath: string): string {
+  if (
+    filePath === "" ||
+    filePath.includes("\\") ||
+    isAbsolutePath(filePath) ||
+    filePath.includes("//") ||
+    filePath.startsWith("/") ||
+    filePath.endsWith("/")
+  ) {
     fail("PATH_INVALID", `Invalid bundle path: ${filePath}`);
   }
 
-  return normalized;
+  for (const segment of filePath.split("/")) {
+    if (segment === "" || segment === "." || segment === "..") {
+      fail("PATH_INVALID", `Invalid bundle path: ${filePath}`);
+    }
+  }
+
+  return filePath;
 }
 
 /**
@@ -21,22 +32,18 @@ export function resolveBundleReference(fromPath: string, referencePath: string):
     fail("PATH_INVALID", "Invalid bundle reference: empty path");
   }
 
-  const from = normalizeBundleFilePath(fromPath);
+  const from = validateBundlePath(fromPath);
+  const target = resolveReferencePath(getBundlePathDirectory(from), referencePath);
 
-  const reference = referencePath.replaceAll("\\", "/");
-  const target = reference.startsWith("/")
-    ? reference.slice(1)
-    : joinBundlePaths(getBundlePathDirectory(from), reference);
-
-  return normalizeBundlePath(target);
+  return target === "" ? "" : validateBundlePath(target);
 }
 
 /**
  * Format a bundle path as a relative reference from one bundle file.
  */
 export function formatBundleReference(fromPath: string, targetPath: string): string {
-  const from = normalizeBundleFilePath(fromPath);
-  const target = normalizeBundleFilePath(targetPath);
+  const from = validateBundlePath(fromPath);
+  const target = validateBundlePath(targetPath);
 
   const relative = getRelativeBundlePath(getBundlePathDirectory(from), target);
 
@@ -52,42 +59,10 @@ export function compareBundlePaths(left: string, right: string): number {
   return 0;
 }
 
-/**
- * Normalize a bundle path that may point to the bundle root.
- */
-function normalizeBundlePath(filePath: string): string {
-  if (isAbsolutePath(filePath)) {
-    fail("PATH_INVALID", `Invalid bundle path: ${filePath}`);
-  }
-
-  const segments: string[] = [];
-
-  for (const segment of filePath.replaceAll("\\", "/").split("/")) {
-    if (segment === "" || segment === ".") continue;
-
-    if (segment === "..") {
-      if (segments.length === 0) {
-        fail("PATH_INVALID", `Invalid bundle path: ${filePath}`);
-      }
-
-      segments.pop();
-      continue;
-    }
-
-    segments.push(segment);
-  }
-
-  return segments.join("/");
-}
-
 function isAbsolutePath(filePath: string): boolean {
   return (
     filePath.startsWith("/") || filePath.startsWith("\\\\") || /^[a-zA-Z]:[\\/]/.test(filePath)
   );
-}
-
-function joinBundlePaths(directory: string, filePath: string): string {
-  return directory === "" ? filePath : `${directory}/${filePath}`;
 }
 
 function getBundlePathDirectory(filePath: string): string {
@@ -117,4 +92,44 @@ function getRelativeBundlePath(fromDirectory: string, targetPath: string): strin
     ...Array<string>(fromParts.length - shared).fill(".."),
     ...targetParts.slice(shared),
   ].join("/");
+}
+
+/**
+ * Resolve a reference path before validating the resulting bundle path.
+ */
+function resolveReferencePath(fromDirectory: string, referencePath: string): string {
+  if (referencePath.includes("\\")) {
+    fail("PATH_INVALID", `Invalid bundle reference: ${referencePath}`);
+  }
+
+  const absolute = referencePath.startsWith("/");
+  const rawReference = absolute ? referencePath.slice(1) : referencePath;
+  const segments = absolute || fromDirectory === "" ? [] : fromDirectory.split("/");
+
+  if (rawReference === "") {
+    return "";
+  }
+
+  for (const segment of rawReference.split("/")) {
+    if (segment === "") {
+      fail("PATH_INVALID", `Invalid bundle reference: ${referencePath}`);
+    }
+
+    if (segment === ".") {
+      continue;
+    }
+
+    if (segment === "..") {
+      if (segments.length === 0) {
+        fail("PATH_INVALID", `Invalid bundle reference: ${referencePath}`);
+      }
+
+      segments.pop();
+      continue;
+    }
+
+    segments.push(segment);
+  }
+
+  return segments.join("/");
 }

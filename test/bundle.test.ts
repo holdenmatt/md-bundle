@@ -9,19 +9,20 @@ import {
   isMarkdownFile,
   isTextFile,
   MarkdownBundleError,
+  validateBundlePath,
   type MarkdownBundle,
 } from "../src/index.js";
 
 describe("createBundle", () => {
-  test("normalizes files into a sorted bundle with a root text file", () => {
+  test("creates a sorted bundle with a root text file", () => {
     const image = new Uint8Array([0, 255]);
 
     const bundle = createBundle({
-      rootPath: "./SKILL.md",
+      rootPath: "SKILL.md",
       files: [
-        { path: "references\\checklist.md", content: "# Checklist\n" },
+        { path: "references/checklist.md", content: "# Checklist\n" },
         { path: "assets/logo.png", bytes: image },
-        { path: "docs/../SKILL.md", content: "# Skill\n" },
+        { path: "SKILL.md", content: "# Skill\n" },
       ],
     });
 
@@ -34,17 +35,24 @@ describe("createBundle", () => {
     ]);
   });
 
+  test("allows explicit text roots that are not Markdown files", () => {
+    const bundle = createBundle({
+      rootPath: "PROVIDER.yaml",
+      files: [
+        { path: "PROVIDER.yaml", content: "name: example\n" },
+        { path: "docs/README.md", content: "# Example\n" },
+      ],
+    });
+
+    expect(bundle.root).toEqual({ path: "PROVIDER.yaml", content: "name: example\n" });
+  });
+
   test.each([
     ["missing root", { rootPath: "SKILL.md", files: [] }, "ROOT_MISSING"],
     [
       "escaping root path",
       { rootPath: "../SKILL.md", files: [{ path: "SKILL.md", content: "" }] },
       "PATH_INVALID",
-    ],
-    [
-      "non-markdown root",
-      { rootPath: "README.txt", files: [{ path: "README.txt", content: "" }] },
-      "ROOT_INVALID",
     ],
     [
       "binary root",
@@ -57,7 +65,7 @@ describe("createBundle", () => {
         rootPath: "SKILL.md",
         files: [
           { path: "SKILL.md", content: "" },
-          { path: "./SKILL.md", content: "" },
+          { path: "SKILL.md", content: "" },
         ],
       },
       "FILE_DUPLICATE",
@@ -69,6 +77,28 @@ describe("createBundle", () => {
         files: [
           { path: "SKILL.md", content: "" },
           { path: "../outside.md", content: "" },
+        ],
+      },
+      "PATH_INVALID",
+    ],
+    [
+      "dot segment path",
+      {
+        rootPath: "SKILL.md",
+        files: [
+          { path: "SKILL.md", content: "" },
+          { path: "assets/./logo.png", bytes: new Uint8Array() },
+        ],
+      },
+      "PATH_INVALID",
+    ],
+    [
+      "backslash path",
+      {
+        rootPath: "SKILL.md",
+        files: [
+          { path: "SKILL.md", content: "" },
+          { path: "references\\checklist.md", content: "" },
         ],
       },
       "PATH_INVALID",
@@ -112,6 +142,27 @@ describe("createBundle", () => {
   });
 });
 
+describe("validateBundlePath", () => {
+  test("returns valid contained bundle paths", () => {
+    expect(validateBundlePath("references/checklist.md")).toBe("references/checklist.md");
+  });
+
+  test.each([
+    "",
+    ".",
+    "docs/../README.md",
+    "docs/./README.md",
+    "docs//README.md",
+    "/README.md",
+    "C:/README.md",
+    "docs\\README.md",
+  ])("rejects invalid bundle path %s", (bundlePath) => {
+    expect(() => validateBundlePath(bundlePath)).toThrow(
+      expect.objectContaining({ code: "PATH_INVALID" }),
+    );
+  });
+});
+
 describe("get files", () => {
   const bundle = createBundle({
     rootPath: "SKILL.md",
@@ -121,8 +172,8 @@ describe("get files", () => {
     ],
   });
 
-  test("gets files by normalized path", () => {
-    expect(getFile(bundle, "./SKILL.md")).toEqual({
+  test("gets files by path", () => {
+    expect(getFile(bundle, "SKILL.md")).toEqual({
       path: "SKILL.md",
       content: "# Skill\n",
     });
@@ -130,7 +181,7 @@ describe("get files", () => {
       path: "SKILL.md",
       content: "# Skill\n",
     });
-    expect(getBinaryFile(bundle, "assets/./logo.png")).toEqual({
+    expect(getBinaryFile(bundle, "assets/logo.png")).toEqual({
       path: "assets/logo.png",
       bytes: new Uint8Array([1, 2, 3]),
     });

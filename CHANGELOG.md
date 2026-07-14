@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0
+
+- Breaking: bundle paths are now strictly contained paths. Stored paths with
+  absolute paths, empty segments, `.`, `..`, or backslash separators now throw.
+- Breaking: `loadBundle` now throws `MarkdownBundleError` with code
+  `path-escape` when a symlinked file or directory resolves outside the bundle
+  directory.
+- Document that bundle roots are text files. Markdown is the convention, but
+  other roots such as `PROVIDER.yaml` are supported.
+- Add `validateBundlePath` to the browser-safe root entry.
+
 ## 0.2.0
 
 - Breaking: the root `md-bundle` entry point is now browser-safe and exports

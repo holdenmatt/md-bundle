@@ -1,7 +1,7 @@
 {
   "name": "md-bundle",
-  "version": "0.2.0",
-  "description": "Markdown bundles: one root Markdown file plus related docs, scripts, and assets.",
+  "version": "0.3.0",
+  "description": "Markdown bundles: one root text file plus related docs, scripts, and assets.",
   "license": "MIT",
   "repository": {
     "type": "git",

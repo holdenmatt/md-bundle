@@ -9,6 +9,7 @@ import {
   getFile,
   getTextFile,
   MarkdownBundleError,
+  type MarkdownBundle,
 } from "../src/index.js";
 import { loadBundle, writeBundle } from "../src/node.js";
 
@@ -48,6 +49,21 @@ describe("loadBundle", () => {
       const bundle = await loadBundle(directory, { rootPath: "GUIDE.md" });
 
       expect(bundle.root).toEqual({ path: "GUIDE.md", content: "# Guide\n" });
+    });
+  });
+
+  test("uses explicit non-Markdown text roots for directory input", async () => {
+    await withTempDir(async (directory) => {
+      await writeFile(path.join(directory, "PROVIDER.yaml"), "name: example\n");
+      await writeFile(path.join(directory, "README.md"), "# Example\n");
+
+      const bundle = await loadBundle(directory, { rootPath: "PROVIDER.yaml" });
+
+      expect(bundle.root).toEqual({ path: "PROVIDER.yaml", content: "name: example\n" });
+      expect(getTextFile(bundle, "README.md")).toEqual({
+        path: "README.md",
+        content: "# Example\n",
+      });
     });
   });
 
@@ -103,6 +119,39 @@ describe("loadBundle", () => {
       );
     });
   });
+
+  test("rejects symlinked files that escape the bundle directory", async () => {
+    await withTempDir(async (directory) => {
+      const bundleDirectory = path.join(directory, "bundle");
+      const outsideDirectory = path.join(directory, "outside");
+
+      await mkdir(bundleDirectory);
+      await mkdir(outsideDirectory);
+      await writeFile(path.join(bundleDirectory, "SKILL.md"), "# Skill\n");
+      await writeFile(path.join(outsideDirectory, "secret.md"), "# Secret\n");
+      await symlink(
+        path.join(outsideDirectory, "secret.md"),
+        path.join(bundleDirectory, "secret.md"),
+      );
+
+      await expect(loadBundle(bundleDirectory)).rejects.toMatchObject({ code: "path-escape" });
+    });
+  });
+
+  test("rejects symlinked directories that escape the bundle directory", async () => {
+    await withTempDir(async (directory) => {
+      const bundleDirectory = path.join(directory, "bundle");
+      const outsideDirectory = path.join(directory, "outside");
+
+      await mkdir(bundleDirectory);
+      await mkdir(outsideDirectory);
+      await writeFile(path.join(bundleDirectory, "SKILL.md"), "# Skill\n");
+      await writeFile(path.join(outsideDirectory, "checklist.md"), "# Checklist\n");
+      await symlink(outsideDirectory, path.join(bundleDirectory, "references"));
+
+      await expect(loadBundle(bundleDirectory)).rejects.toMatchObject({ code: "path-escape" });
+    });
+  });
 });
 
 describe("writeBundle", () => {
@@ -134,6 +183,25 @@ describe("writeBundle", () => {
       await expect(readFile(path.join(output, "assets", "logo.bin"))).resolves.toEqual(
         Buffer.from([0xff]),
       );
+    });
+  });
+
+  test.each([
+    ["relative escape", "../outside.md"],
+    ["absolute path", "/outside.md"],
+  ])("rejects crafted bundle paths before writing: %s", async (_name, bundlePath) => {
+    await withTempDir(async (directory) => {
+      const bundle: MarkdownBundle = {
+        root: { path: "SKILL.md", content: "# Skill\n" },
+        files: [
+          { path: "SKILL.md", content: "# Skill\n" },
+          { path: bundlePath, content: "# Outside\n" },
+        ],
+      };
+
+      await expect(writeBundle(bundle, directory)).rejects.toMatchObject({
+        code: "PATH_INVALID",
+      });
     });
   });
 });

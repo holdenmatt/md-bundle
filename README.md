@@ -1,7 +1,7 @@
 # md-bundle
 
-A Markdown bundle is a root Markdown file plus optional related files in the
-same folder tree, addressed by bundle-relative paths.
+A Markdown bundle is a root text file plus optional related files in the same
+folder tree, addressed by bundle-relative paths.
 
 The root file stays the entry point. Supporting Markdown files, scripts, and
 assets let the bundle grow by progressive disclosure instead of becoming one
@@ -9,8 +9,8 @@ giant document.
 
 An [agent skill](https://agentskills.io/) is one example of a Markdown bundle:
 `SKILL.md` is the root file, while references, scripts, and assets can live
-beside it. `md-bundle` makes that folder shape reusable for skills, agent
-instructions, docs, specs, and other Markdown artifacts.
+beside it. The root is usually Markdown by convention, but any text format can
+root a bundle. A YAML or JSON manifest can be the entry point too.
 
 ## Install
 
@@ -41,10 +41,10 @@ const checklist = getTextFile(bundle, "references/checklist.md");
 
 `md-bundle` exports the pure bundle model. It is browser-safe and has no Node
 builtins in its import graph. Use it for bundle values, file type guards, path
-references, and in-memory bundle construction.
+validation, references, and in-memory bundle construction.
 
 ```ts
-import { createBundle, isTextFile, resolveBundleReference } from "md-bundle";
+import { createBundle, isTextFile, resolveBundleReference, validateBundlePath } from "md-bundle";
 ```
 
 `md-bundle/node` exports the Node filesystem adapter.
@@ -69,7 +69,7 @@ import { loadBundle, writeBundle } from "md-bundle/node";
 
 ## Bundle Model
 
-A bundle has one root Markdown file and zero or more related files beside it.
+A bundle has one root text file and zero or more related files beside it.
 
 ```ts
 type MarkdownBundle = {
@@ -96,8 +96,11 @@ references/checklist.md
 assets/logo.png
 ```
 
-`root` is the text file clients should read first. `files` contains the complete
-bundle, including the root file.
+`root` is the text file clients should read first. It is usually Markdown
+(eg `SKILL.md`), but any text format works. A YAML or JSON manifest
+can root a bundle when callers pass an explicit `rootPath`.
+
+`files` contains the complete bundle, including the root file.
 
 Files are addressed by paths relative to the bundle directory. Text files store
 `content`. Binary files store `bytes`.
@@ -112,7 +115,7 @@ import { loadBundle } from "md-bundle/node";
 loadBundle(path, { rootPath }?);
 ```
 
-Reads a bundle from a root Markdown file or directory.
+Reads a bundle from a root text file or directory.
 
 When `path` is a file, that file is the bundle root and its parent directory is
 the bundle directory. When `path` is a directory, `rootPath` can identify the
@@ -125,6 +128,16 @@ createBundle({ rootPath, files });
 ```
 
 Creates a normalized bundle from in-memory files.
+
+### Validate Paths
+
+```ts
+validateBundlePath(bundlePath);
+```
+
+Returns a contained bundle path or throws `MarkdownBundleError`. Bundle paths
+must be relative `/`-separated paths without empty, `.`, `..`, backslash, or
+absolute path segments.
 
 ### Get Files
 

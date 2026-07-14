@@ -1,5 +1,5 @@
 /**
- * Folder-shaped collection of files with one root Markdown file.
+ * Folder-shaped collection of files with one root text file.
  */
 export type MarkdownBundle = {
   /** Text file clients should read first. */

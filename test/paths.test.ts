@@ -21,6 +21,8 @@ describe("resolveBundleReference", () => {
   test.each([
     ["docs/index.md", ""],
     ["docs/index.md", "../../outside.md"],
+    ["docs/index.md", "references//checklist.md"],
+    ["docs/index.md", "references\\checklist.md"],
   ])("rejects invalid reference %s + %s", (fromPath, referencePath) => {
     expect(() => resolveBundleReference(fromPath, referencePath)).toThrow(MarkdownBundleError);
     expect(() => resolveBundleReference(fromPath, referencePath)).toThrow(
