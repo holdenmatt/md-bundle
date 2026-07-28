@@ -1,5 +1,5 @@
 {
-  "name": "md-bundle",
+  "name": "@holdenmatt/md-bundle",
   "version": "0.3.0",
   "description": "Markdown bundles: one root text file plus related docs, scripts, and assets.",
   "license": "MIT",
@@ -25,6 +25,9 @@
       "import": "./dist/node.js",
       "default": "./dist/node.js"
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsc",

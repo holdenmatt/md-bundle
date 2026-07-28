@@ -2,6 +2,7 @@
 
 ## 0.3.0
 
+- Package identity: this package is now published as `@holdenmatt/md-bundle`.
 - Breaking: bundle paths are now strictly contained paths. Stored paths with
   absolute paths, empty segments, `.`, `..`, or backslash separators now throw.
 - Breaking: `loadBundle` now throws `MarkdownBundleError` with code
@@ -13,8 +14,9 @@
 
 ## 0.2.0
 
-- Breaking: the root `md-bundle` entry point is now browser-safe and exports
-  only the pure Markdown bundle model.
-- Move Node filesystem helpers to `md-bundle/node`.
-- Migration: replace `import { loadBundle, writeBundle } from "md-bundle"` with
-  `import { loadBundle, writeBundle } from "md-bundle/node"`.
+- Breaking: the root `@holdenmatt/md-bundle` entry point is now browser-safe
+  and exports only the pure Markdown bundle model.
+- Move Node filesystem helpers to `@holdenmatt/md-bundle/node`.
+- Migration: replace
+  `import { loadBundle, writeBundle } from "@holdenmatt/md-bundle"` with
+  `import { loadBundle, writeBundle } from "@holdenmatt/md-bundle/node"`.
