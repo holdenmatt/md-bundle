@@ -2,11 +2,17 @@
 
 This spec defines behavior that is intentionally more precise than the README.
 
+This document covers the core bundle model and Node adapter. Schema validation
+is specified separately in [docs/schema-spec.md](./docs/schema-spec.md); see the
+[schema guide](./docs/schema.md) for examples.
+
 ## Entry Points
 
 - `@holdenmatt/md-bundle` is the pure model entry point and must not import
   Node builtins.
 - `@holdenmatt/md-bundle/node` is the Node filesystem adapter entry point.
+- `@holdenmatt/md-bundle/schema` is a separate browser-safe schema entry point
+  and is not imported by the core model.
 - `loadBundle` and `writeBundle` are exported from
   `@holdenmatt/md-bundle/node`, not from `@holdenmatt/md-bundle`.
 - Migration from `0.1.x`: replace
@@ -62,3 +68,7 @@ This spec defines behavior that is intentionally more precise than the README.
   deleted.
 - Bundle paths are validated before writing so crafted bundle values cannot
   write outside the target directory.
+
+See the [README](./README.md) for an overview and the
+[schema specification](./docs/schema-spec.md) for validation semantics layered
+on this model.

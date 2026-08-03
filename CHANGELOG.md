@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+- Add the browser-safe `@holdenmatt/md-bundle/schema` entry point for typed
+  bundle-format validation, nested bundles, and findings.
+- Include the schema guide and specification in the published package.
+
 ## 0.3.0
 
 - Package identity: this package is now published as `@holdenmatt/md-bundle`.
