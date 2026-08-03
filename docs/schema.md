@@ -188,4 +188,5 @@ The schema entry exports:
 
 For exact matching, ownership, validation, and result semantics, see the
 [schema specification](./schema-spec.md). For the underlying value and path
-rules, see the [core bundle specification](../SPEC.md).
+APIs, see [Bundle API and usage](./api.md); the
+[core bundle specification](../SPEC.md) covers precise behavior and edge cases.

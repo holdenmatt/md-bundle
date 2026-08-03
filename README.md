@@ -75,6 +75,7 @@ bundles, findings, and the complete API.
 
 ## Documentation
 
+- [Bundle API and usage](./docs/api.md)
 - [Core bundle specification](./SPEC.md)
 - [Schema guide](./docs/schema.md)
 - [Schema specification](./docs/schema-spec.md)

@@ -2,8 +2,9 @@
 
 This spec defines behavior that is intentionally more precise than the README.
 
-This document covers the core bundle model and Node adapter. Schema validation
-is specified separately in [docs/schema-spec.md](./docs/schema-spec.md); see the
+This document covers the core bundle model and Node adapter. For practical
+examples, see [docs/api.md](./docs/api.md). Schema validation is specified
+separately in [docs/schema-spec.md](./docs/schema-spec.md); see the
 [schema guide](./docs/schema.md) for examples.
 
 ## Entry Points
@@ -69,6 +70,7 @@ is specified separately in [docs/schema-spec.md](./docs/schema-spec.md); see the
 - Bundle paths are validated before writing so crafted bundle values cannot
   write outside the target directory.
 
-See the [README](./README.md) for an overview and the
+See the [README](./README.md) for an overview, the
+[bundle API guide](./docs/api.md) for practical usage, and the
 [schema specification](./docs/schema-spec.md) for validation semantics layered
 on this model.
